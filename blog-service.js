@@ -39,13 +39,14 @@ module.exports.initialize = function () {
 
 module.exports.getAllPosts = function () {
   return new Promise((resolve, reject) => {
-    Post.findAll()
-      .then((data) => {
-        resolve(data);
-      })
-      .catch((err) => {
-        reject("no results returned");
+    sequelize.sync().then(function () {
+      Post.findAll({}).then(function (data) {
+        if (data.length == 0) {
+          reject("Query returned 0 results");
+        }
+        resolve(data); // returns the array of posts.
       });
+    });
   });
 };
 
@@ -116,7 +117,7 @@ module.exports.addPost = function (postData) {
         resolve();
       })
       .catch((e) => {
-        reject("unable to create post");
+        reject("unable to create post" + e);
       });
   });
 };

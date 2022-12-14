@@ -70,7 +70,7 @@ module.exports.checkUser = (userData) => {
               dateTime: new Date().toString(),
               userAgent: userData.userAgent,
             });
-            User.update(
+            User.updateOne(
               { userName: users[0].userName },
               { $set: { loginHistory: users[0].loginHistory } },
               { multi: false }

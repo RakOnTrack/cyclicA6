@@ -1,19 +1,19 @@
 <div class="row">
   <div class="col-md-12">
-<h2>{{session.user.userName}} ({{session.user.email}}) History</h2>
+    <h2>{{session.user.userName}} ({{session.user.email}}) History</h2>
     <table class="table">
 
       <thead>
-        <tr>Login Date/Time</tr>
-        <tr>Client Information</tr>
+        <td>Login Date/Time</td>
+        <td>Client Information</td>
       </thead>
 
       <tbody>
         {{#each session.user.loginHistory}}
 
           <tr>
-            <td>dateTime</td>
-            <td>userAgent</td>
+            <td>{{dateTime}}</td>
+            <td>{{userAgent}}</td>
           </tr>
 
         {{/each}}

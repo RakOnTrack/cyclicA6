@@ -1,3 +1,15 @@
+/*********************************************************************************
+ *  WEB322 – Assignment 06
+ *  I declare that this assignment is my own work in accordance with Seneca  Academic Policy.  No part of this
+ *  assignment has been copied manually or electronically from any other source (including web sites) or
+ *  distributed to other students.
+ *
+ *  Name: __Eric Rak____________________ Student ID: __180211211____________ Date: _Nov 27th 2022_______________
+ *
+ *  Online (Heroku) Link: ________https://sore-teal-crab-slip.cyclic.app/blog
+ *
+ ********************************************************************************/
+
 const express = require("express");
 const blogData = require("./blog-service");
 const multer = require("multer");
@@ -22,14 +34,10 @@ app.use(
   })
 );
 
-app.use(
-  clientSessions({
-    cookieName: "session",
-    secret: "web322_assignment6",
-    duration: 2 * 60 * 1000,
-    activeDuration: 1000 * 60,
-  })
-);
+app.use(function (req, res, next) {
+  res.locals.session = req.session;
+  next();
+});
 
 function ensureLogin(req, res, next) {
   if (!req.session.user) {
@@ -76,11 +84,14 @@ app.engine(
       safeHTML: function (context) {
         return stripJs(context);
       },
+      // formatDate: function (dateObj) {
+      //   let year = dateObj.getFullYear();
+      //   let month = (dateObj.getMonth() + 1).toString();
+      //   let day = dateObj.getDate().toString();
+      //   return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+      // },
       formatDate: function (dateObj) {
-        let year = dateObj.getFullYear();
-        let month = (dateObj.getMonth() + 1).toString();
-        let day = dateObj.getDate().toString();
-        return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+        return `${dateObj}`;
       },
     },
   })
@@ -156,25 +167,34 @@ app.get("/blog", async (req, res) => {
 });
 
 app.get("/posts", ensureLogin, (req, res) => {
-  let queryPromise = null;
+  let category = req.query.category;
+  let minDate = req.query.minDate;
 
-  if (req.query.category) {
-    queryPromise = blogData.getPostsByCategory(req.query.category);
-  } else if (req.query.minDate) {
-    queryPromise = blogData.getPostsByMinDate(req.query.minDate);
-  } else {
-    queryPromise = blogData.getAllPosts();
-  }
-
-  queryPromise
-    .then((data) => {
-      data.length > 0
-        ? res.render("posts", { posts: data })
-        : res.render("posts", { message: "no results" });
-    })
-    .catch((err) => {
-      res.render("posts", { message: "no results" });
+  if (category) {
+    blogData.getPostsByCategory(category).then((data) => {
+      if (data.length > 0) {
+        res.render("posts", { posts: data });
+      } else {
+        res.render("posts", { message: "no results" });
+      }
     });
+  } else if (minDate != "" && minDate != null) {
+    blogData.getPostsByMinDate(minDate).then((data) => {
+      if (data.length > 0) {
+        res.render("posts", { posts: data });
+      } else {
+        res.render("posts", { message: "no results" });
+      }
+    });
+  } else {
+    blogData.getAllPosts().then((data) => {
+      if (data.length > 0) {
+        res.render("posts", { posts: data });
+      } else {
+        res.render("posts", { message: "no results" });
+      }
+    });
+  }
 });
 
 app.post(
@@ -353,7 +373,6 @@ app.get("/register", (req, res) => {
   res.render("register");
 });
 
-
 app.post("/register", (req, res) => {
   authData
     .registerUser(req.body)
@@ -362,7 +381,6 @@ app.post("/register", (req, res) => {
       res.render("register", { errorMessage: err, userName: req.body.userName })
     );
 });
-
 
 app.post("/login", (req, res) => {
   req.body.userAgent = req.get("User-Agent");
